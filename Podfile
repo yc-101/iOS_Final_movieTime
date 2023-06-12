@@ -8,6 +8,7 @@ target 'movieTime' do
   # Pods for movieTime
 	pod 'Alamofire'
 	pod 'Kanna', '~> 5.2.2'
+	pod 'FakeUserAgent'
 
   target 'movieTimeTests' do
     inherit! :search_paths

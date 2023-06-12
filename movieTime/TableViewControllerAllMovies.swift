@@ -20,7 +20,7 @@ class TableViewControllerAllMovies: UITableViewController {
 	
     override func viewDidLoad() {
         super.viewDidLoad()
-		
+		navigationItem.title = "Select a movie🎬"
 		buildAllMovies()
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
@@ -31,6 +31,7 @@ class TableViewControllerAllMovies: UITableViewController {
 	
 	func buildAllMovies() {
 		movies.append(movie_struct(name: "玩命關頭X", imageName: "0", backUrl: "&bsn=60200&snA=40082&tnum=58"))
+		movies.append(movie_struct(name: "變形金剛：萬獸崛起", imageName: "1", backUrl: "&bsn=60200&snA=40139&tnum=48"))
 	}
 	
     // MARK: - Table view data source
@@ -107,6 +108,6 @@ class TableViewControllerAllMovies: UITableViewController {
 			controller?.navigationItem.title = movies[row].name
 		}
     }
-    
+	
 
 }

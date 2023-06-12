@@ -6,7 +6,7 @@ PODS:
 DEPENDENCIES:
   - Alamofire
   - FakeUserAgent
-  - Kanna (~> 5.2.2)
+  - Kanna
 
 SPEC REPOS:
   trunk:
@@ -19,6 +19,6 @@ SPEC CHECKSUMS:
   FakeUserAgent: a42bf4b041b4431d95a02d6fcf89f9c143fbffbf
   Kanna: 01cfbddc127f5ff0963692f285fcbc8a9d62d234
 
-PODFILE CHECKSUM: b271150cf527d7ebe4c6a5da657f38c721687aac
+PODFILE CHECKSUM: 0b1935704b3e1a1a5db3ae5aeec301ad3ce0733b
 
 COCOAPODS: 1.12.1

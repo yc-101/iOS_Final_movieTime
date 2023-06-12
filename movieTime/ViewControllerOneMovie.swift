@@ -13,6 +13,14 @@ import FakeUserAgent
 
 class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableViewDataSource {
 	
+	let PAGE_LIMIT = 1
+
+	 struct data_struct {
+	 //		var date: String = ""
+		 var floor: String = ""
+		 var text = NSAttributedString()
+	 }
+	
 	@IBOutlet weak var indexTableView: UITableView!
 	var backUrl = String()
 	var tag = String()
@@ -26,13 +34,15 @@ class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableView
 		queue.async {
 			
 			DispatchQueue.main.async {
-				let arr: [data_struct] = load_data(backUrl: self.backUrl, tag: self.tag)
-				print(arr.count)
-				if (arr.count > 0 && !arr[0].text.contains("ERROR")) {
-					
-					self.indexes.append(contentsOf: arr)
-					self.indexTableView.reloadData()
-				}
+				self.load_data(backUrl: self.backUrl, tag: self.tag)
+				self.indexTableView.reloadData()
+				print(self.indexTableView.numberOfRows(inSection: 0))
+//				print(arr.count)
+//				if (arr.count > 0 && !arr[0].text.contains("ERROR")) {
+//
+//					self.indexes.append(contentsOf: arr)
+//					self.indexTableView.reloadData()
+//				}
 //				else {
 //					let alertController = UIAlertController(title: "Error", message: "巴哈維修中:(", preferredStyle: .alert)
 //					alertController.addAction(UIAlertAction(title: "OK", style: .default) {_ in
@@ -47,21 +57,12 @@ class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableView
     }
 	
 	//MARK: - html parser
-	
-	let PAGE_LIMIT = 1
 
-	 struct data_struct {
-	 //		var date: String = ""
-		 var floor: String = ""
-		 var text: String = ""
-	 }
-
-	 func load_data(backUrl: String, tag: String) -> [data_struct] {
+	 func load_data(backUrl: String, tag: String) {
 		 var page = 1
 		 var check = true
-		 var ssReturn: [data_struct] = Array()
 		 print("loading...")
-		 
+		 self.title = tag
 			 
 		 while(page <= PAGE_LIMIT) {
 			 
@@ -86,23 +87,21 @@ class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableView
 						 // 成功获取到HTML数据
 						 // 使用Kanna解析HTML
 						 print("load successful!")
-	 //					print(html)
 						 let doc = try? Kanna.HTML(html: html, encoding: String.Encoding.utf8)
 						 if(doc?.xpath("/html/body/div").first?.className == "maintain") {
 							 check = false
-							 ssReturn.append(data_struct(floor: "", text: "ERROR : 伺服器錯誤"))
+//							 ssReturn.append(data_struct(floor: "", text: "ERROR : 伺服器錯誤"))
+							 print("ERROR : 伺服器錯誤 (你爬蟲爬太多次ㄌ)")
 							 break
 						 }
 						 
 						 else{
-							 let arr = parsehtml(doc: doc!, tag: tag)
-							 ssReturn.append(contentsOf: arr)
+							 self.parsehtml(doc: doc!, tag: tag)
 						 }
 					 case .failure(let error):
 						 // 处理错误
 						 check = false
-						 ssReturn.append(data_struct(floor: "", text: "ERROR : load failed"))
-						 print("load failed, returning...")
+						 print("ERROR : AF.request load failed, returning...")
 						 print(error)
 					 }
 				 }
@@ -110,23 +109,21 @@ class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableView
 			 }
 			 
 			 if check == false {
-				 print("error detected, return ssReturn.count = ", ssReturn.count)
-				 return ssReturn
+				 print("error detected, return.")
 			 }
 			 page += 1
 		 }
-		 print("ssReturn: ", ssReturn)
-		 return ssReturn
 	 }
 
-	 func parsehtml(doc: HTMLDocument, tag: String) -> [data_struct]  {
-		 var ssReturn: [data_struct] = Array()
+	 func parsehtml(doc: HTMLDocument, tag: String) {
+		 
 		 var s = data_struct()
-//		 print(doc.title)
+		 
 		 // 找每一樓（不包含留言）的文章內容
 		 let articles = doc.xpath("//div[contains(@class, 'c-section__main c-post ')]")
 		 print(articles)
 		 print("尋找的關鍵字：\(tag)")
+		 
 		 for article in articles {
 			 
 	 //		print("article: \(article.text)")
@@ -141,18 +138,47 @@ class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableView
 	 //				print("Article text:", articleText.text ?? "")
 				 let ws = extractSentences(from: articleText.text!)
 				 for w in ws {
-					 if(w.contains(tag)){ // eg. "劇情"
+					 if(w.contains(tag) && w.count < 200){ // eg. "劇情"
 						 print("(\(dataFloor)) : \(w)")
-						 s.text = w
+						 let attributedString = NSMutableAttributedString(string: w)
+
+						 // Set red color and bold font attributes
+						 let attributes: [NSAttributedString.Key: Any] = [
+//							 .font: UIFont.boldSystemFont(ofSize: 16),
+							 .foregroundColor: UIColor.red
+						 ]
+
+						 // Find the range of the specified string in the original string
+						 let range = (w as NSString).range(of: tag)
+						 // Apply the attributes to the specified range
+						 attributedString.addAttributes(attributes, range: range)
+						 attributedString.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: NSRange(location: 0, length: attributedString.length))
+
+
+						 // Assign the attributed string to the label's attributedText property
+						 s.text = attributedString
 						 
-						 ssReturn.append(s)
+//						 s.text = w
+						 indexes.append(s)
+//						 ssReturn.append(s)
 					 }
 				 }
 	 //				print("Article Text: \(text)")
 			 }
 		 }
-		 //MARK: - 要記得reload data！
-		 return ssReturn;
+		 self.indexTableView.reloadData()
+		 
+		 // 尋找的關鍵字沒有結果
+		 if(indexes.count == 0) {
+			 let alert = UIAlertController(
+				 title: "錯誤",
+				 message: "沒有符合「\(tag)」的文章內容",
+				 preferredStyle: .alert
+			 )
+			 alert.addAction(UIAlertAction(title: "ok", style: .default, handler: nil))
+			 
+			 present(alert, animated: true, completion: nil)
+		 }
 	 }
 
 
@@ -209,8 +235,12 @@ class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableView
 		// 设置较大的宽度
 		cell.bounds = CGRect(x: 0, y: 0, width: 1000, height: cell.bounds.height)
   
-		cell.textView?.text = String(indexes[indexPath.row].floor + "F\n"  +   indexes[indexPath.row].text)
+//		cell.textView?.text = "(" + indexes[indexPath.row].floor + "樓)\n" + indexes[indexPath.row].text //原始 （還沒加紅色粗體）
+		let floorString = "(\(indexes[indexPath.row].floor)樓)\n"
+		let combinedString = NSMutableAttributedString(string: floorString)
+		combinedString.append(indexes[indexPath.row].text)
 		
+		cell.textView?.attributedText = combinedString
 //		print("\(indexPath.row) : \(String(describing: cell.indexLabel?.text))")
 //		cell.imageView?.image = UIImage(named: indexes[indexPath.row])
 		return cell

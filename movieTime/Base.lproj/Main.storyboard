@@ -101,6 +101,17 @@
                                     <outlet property="delegate" destination="oec-Id-u5M" id="QoF-DM-a0T"/>
                                 </connections>
                             </tableView>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="large" translatesAutoresizingMaskIntoConstraints="NO" id="YTJ-Ew-Q8v">
+                                <rect key="frame" x="182" y="693" width="50" height="45"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            </activityIndicatorView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="loading..." textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eMP-zx-EXR">
+                                <rect key="frame" x="172" y="761" width="70" height="21"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="UCd-v4-IPg"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -108,11 +119,13 @@
                     <navigationItem key="navigationItem" id="q1y-VH-bTI"/>
                     <connections>
                         <outlet property="indexTableView" destination="F5Q-mK-1eZ" id="JPt-N0-m4X"/>
+                        <outlet property="spinnerLabel" destination="eMP-zx-EXR" id="njm-fj-vuv"/>
+                        <outlet property="spinnerView" destination="YTJ-Ew-Q8v" id="WsA-kf-GXd"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="l7a-33-RUl" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="906" y="800"/>
+            <point key="canvasLocation" x="2713.04347826087" y="97.767857142857139"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="fRP-T1-MHJ">

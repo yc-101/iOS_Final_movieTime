@@ -13,13 +13,14 @@ import FakeUserAgent
 
 class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableViewDataSource {
 	
-	let PAGE_LIMIT = 1
-
-	 struct data_struct {
-	 //		var date: String = ""
-		 var floor: String = ""
-		 var text = NSAttributedString()
-	 }
+	@IBOutlet weak var spinnerView: UIActivityIndicatorView!
+	@IBOutlet weak var spinnerLabel: UILabel!
+	
+	struct data_struct {
+//		var date: String = ""
+		var floor: String = ""
+		var text = NSAttributedString()
+	}
 	
 	@IBOutlet weak var indexTableView: UITableView!
 	var backUrl = String()
@@ -28,30 +29,18 @@ class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableView
 	
     override func viewDidLoad() {
         super.viewDidLoad()
+		spinnerView.hidesWhenStopped = true
+		
+		spinnerView.startAnimating()
+		spinnerLabel.isHidden = false
 		
 		print("(url, tag) = (\(String(backUrl)), \(tag))")
 		let queue = DispatchQueue.global(qos: .default)
 		queue.async {
-			
 			DispatchQueue.main.async {
 				self.load_data(backUrl: self.backUrl, tag: self.tag)
 				self.indexTableView.reloadData()
 				print(self.indexTableView.numberOfRows(inSection: 0))
-//				print(arr.count)
-//				if (arr.count > 0 && !arr[0].text.contains("ERROR")) {
-//
-//					self.indexes.append(contentsOf: arr)
-//					self.indexTableView.reloadData()
-//				}
-//				else {
-//					let alertController = UIAlertController(title: "Error", message: "巴哈維修中:(", preferredStyle: .alert)
-//					alertController.addAction(UIAlertAction(title: "OK", style: .default) {_ in
-//						if let vc = self.storyboard?.instantiateViewController(withIdentifier: "welcomePage") {
-//							self.show(vc, sender: self)
-//						}
-//					})
-//					self.present(alertController, animated: true)
-//				}
 			}
 		}
     }
@@ -59,86 +48,122 @@ class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableView
 	//MARK: - html parser
 
 	 func load_data(backUrl: String, tag: String) {
-		 var page = 1
-		 var check = true
+		 var totalPages = 0  // Variable to store the total number of pages
+
 		 print("loading...")
 		 self.title = tag
-			 
-		 while(page <= PAGE_LIMIT) {
-			 
-			 let randomDelay = Double(arc4random_uniform(3) + 1) // 1到3秒的随机延迟
-			 DispatchQueue.main.asyncAfter(deadline: .now() + randomDelay) {
-				 // 設定爬蟲資訊：headers & agent & url
-				 var agent = String()
-				 FakeUserAgent.shared.pickALot(count: 5, browser: .chrome, filter: { userAgent in
-					 return userAgent.contains("Macintosh; Intel Mac OS X 10_")
-				 }, completion: { result in
-					 let randomIndex = Int(arc4random_uniform(UInt32(result.count)))
-					 agent = result[randomIndex]
-				 })
-				 let headers: HTTPHeaders = [
-					 "User-Agent": agent
-				 ]
-				 let url = "https://forum.gamer.com.tw/C.php?page=\(page)\(backUrl)"
-				 AF.request(url, headers: headers).responseString { response in
+
+		 // 設定爬蟲資訊：headers & agent & url
+		 var agent = String()
+		 FakeUserAgent.shared.pickALot(count: 5, browser: .chrome, filter: { userAgent in
+			 return userAgent.contains("Macintosh; Intel Mac OS X 10_")
+		 }, completion: { result in
+			 let randomIndex = Int(arc4random_uniform(UInt32(result.count)))
+			 agent = result[randomIndex]
+		 })
+		 let headers: HTTPHeaders = [
+			 "User-Agent": agent
+		 ]
+		 let url = "https://forum.gamer.com.tw/C.php?page=1\(backUrl)"
+		 AF.request(url, headers: headers).responseString { response in
+
+			 switch response.result {
+			 case .success(let html):
+				 // 成功获取到HTML数据
+				 // 使用Kanna解析HTML
+				 print("load successful!")
+				 var doc = try? Kanna.HTML(html: html, encoding: String.Encoding.utf8)
+				 // 找總共的頁數
+				 if let pageCountElement = doc?.xpath("//p[@class='BH-pagebtnA']/a[last()]"),
+					 let pageCountString = pageCountElement.first?.text,
+					 let total = Int(pageCountString)
+				 {
+					 totalPages = total
+					 print("Total Pages: \(totalPages)")
 					 
-					 switch response.result {
-					 case .success(let html):
-						 // 成功获取到HTML数据
-						 // 使用Kanna解析HTML
-						 print("load successful!")
-						 let doc = try? Kanna.HTML(html: html, encoding: String.Encoding.utf8)
-						 if(doc?.xpath("/html/body/div").first?.className == "maintain") {
-							 check = false
-//							 ssReturn.append(data_struct(floor: "", text: "ERROR : 伺服器錯誤"))
-							 print("ERROR : 伺服器錯誤 (你爬蟲爬太多次ㄌ)")
-							 break
-						 }
-						 
-						 else{
-							 self.parsehtml(doc: doc!, tag: tag)
-						 }
-					 case .failure(let error):
-						 // 处理错误
-						 check = false
-						 print("ERROR : AF.request load failed, returning...")
-						 print(error)
+					 self.loadPage(page: 1, totalPages: totalPages, backUrl: backUrl, tag: tag, headers: headers) {
+						 self.indexTableView.reloadData()
 					 }
 				 }
-				 print("processing, please wait...")
+				 else
+				 {
+					 // Failed to retrieve the page count
+					 print("Failed to retrieve the page count.")
+				 }
+		 
+				 
+				 
+			 case .failure(let error):
+				 // 处理错误
+//				 check = false
+				 print("ERROR : AF.request load failed, returning...")
+				 print(error)
 			 }
-			 
-			 if check == false {
-				 print("error detected, return.")
-			 }
-			 page += 1
 		 }
+		 print("processing, please wait...")
 	 }
 
-	 func parsehtml(doc: HTMLDocument, tag: String) {
+
+	func loadPage(page: Int, totalPages: Int, backUrl: String, tag: String, headers: HTTPHeaders, completionHandler: @escaping () -> Void) {
+		let randomDelay = Double(arc4random_uniform(3) + 1) // Random delay between 1 and 3 seconds
+		DispatchQueue.main.asyncAfter(deadline: .now() + randomDelay) {
+			print("processing page: \(page)")
+			let url = "https://forum.gamer.com.tw/C.php?page=\(page)\(backUrl)"
+			AF.request(url, headers: headers).responseString { response in
+				var shouldContinue = true
+				
+				switch response.result {
+				case .success(let html):
+					// Successfully retrieved HTML data
+					let doc = try? Kanna.HTML(html: html, encoding: .utf8)
+					if doc?.xpath("/html/body/div").first?.className == "maintain" {
+						print("ERROR: 伺服器錯誤 (你爬蟲爬太多次ㄌ)")
+						shouldContinue = false
+					} else {
+						self.parsehtml(doc: doc!, tag: tag)
+					}
+					
+				case .failure(let error):
+					print("ERROR: AF.request load failed, returning...")
+					print(error)
+					shouldContinue = false
+				}
+				
+				// Check if there are more pages to load
+				if page < totalPages && shouldContinue {
+					// Continue to the next page
+					self.loadPage(page: page + 1, totalPages: totalPages, backUrl: backUrl, tag: tag, headers: headers, completionHandler: completionHandler)
+				} else {
+					// All pages have been processed
+					self.spinnerView.stopAnimating()
+					self.spinnerLabel.isHidden = true
+					completionHandler()
+				}
+			}
+		}
+	}
+	
+	func parsehtml(doc: HTMLDocument, tag: String) {
 		 
-		 var s = data_struct()
-		 
-		 // 找每一樓（不包含留言）的文章內容
-		 let articles = doc.xpath("//div[contains(@class, 'c-section__main c-post ')]")
-		 print(articles)
-		 print("尋找的關鍵字：\(tag)")
-		 
-		 for article in articles {
-			 
-	 //		print("article: \(article.text)")
-			 
+		var s = data_struct()
+
+		// 找每一樓（不包含留言）的文章內容
+		let articles = doc.xpath("//div[contains(@class, 'c-section__main c-post ')]")
+//		print(articles)
+		print("尋找的關鍵字：\(tag)")
+		for article in articles {
+
 			 // 提取 data-floor 属性的值
 			 let dataFloor = article.xpath(".//div[@class='c-post__header__author']//a[@class='floor tippy-gpbp']").first!["data-floor"]!
 			 s.floor = dataFloor
-	 //			print("data-floor:", dataFloor)
+	 			print("data-floor:", dataFloor)
 			 
 			 // 提取 <article> 标签的文本内容
 			 if let articleText = article.xpath(".//article[@class='c-article FM-P2']").first {
-	 //				print("Article text:", articleText.text ?? "")
+//	 				print("Article text:", articleText.text ?? "")
 				 let ws = extractSentences(from: articleText.text!)
 				 for w in ws {
-					 if(w.contains(tag) && w.count < 200){ // eg. "劇情"
+					 if(w.contains(tag) && w.count < 350){ // eg. "劇情"
 						 print("(\(dataFloor)) : \(w)")
 						 let attributedString = NSMutableAttributedString(string: w)
 
@@ -154,20 +179,16 @@ class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableView
 						 attributedString.addAttributes(attributes, range: range)
 						 attributedString.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: NSRange(location: 0, length: attributedString.length))
 
-
 						 // Assign the attributed string to the label's attributedText property
 						 s.text = attributedString
 						 
-//						 s.text = w
 						 indexes.append(s)
-//						 ssReturn.append(s)
 					 }
 				 }
-	 //				print("Article Text: \(text)")
 			 }
 		 }
 		 self.indexTableView.reloadData()
-		 
+		
 		 // 尋找的關鍵字沒有結果
 		 if(indexes.count == 0) {
 			 let alert = UIAlertController(

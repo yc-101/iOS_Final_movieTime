@@ -6,6 +6,9 @@
 //
 
 import UIKit
+import Alamofire
+import Kanna
+import FakeUserAgent
 
 class TableViewControllerAllMovies: UITableViewController {
 	
@@ -32,8 +35,56 @@ class TableViewControllerAllMovies: UITableViewController {
 	func buildAllMovies() {
 		movies.append(movie_struct(name: "玩命關頭X", imageName: "0", backUrl: "&bsn=60200&snA=40082&tnum=58"))
 		movies.append(movie_struct(name: "變形金剛：萬獸崛起", imageName: "1", backUrl: "&bsn=60200&snA=40139&tnum=48"))
+		movies.append(movie_struct(name: "小美人魚", imageName: "2", backUrl: "&bsn=60200&snA=40119&tnum=45"))
+		
 	}
-	
+	/*
+	func parsehtml(doc: HTMLDocument, tag: String) {
+		 
+		var s = data_struct()
+
+		// 找每一樓（不包含留言）的文章內容
+		let articles = doc.xpath("//div[contains(@class, 'c-section__main c-post ')]")
+//		print(articles)
+		print("尋找的關鍵字：\(tag)")
+		for article in articles {
+
+			 // 提取 data-floor 属性的值
+			 let dataFloor = article.xpath(".//div[@class='c-post__header__author']//a[@class='floor tippy-gpbp']").first!["data-floor"]!
+			 s.floor = dataFloor
+				print("data-floor:", dataFloor)
+			 
+			 // 提取 <article> 标签的文本内容
+			 if let articleText = article.xpath(".//article[@class='c-article FM-P2']").first {
+//	 				print("Article text:", articleText.text ?? "")
+				 let ws = extractSentences(from: articleText.text!)
+				 for w in ws {
+					 if(w.contains(tag) && w.count < 350){ // eg. "劇情"
+						 print("(\(dataFloor)) : \(w)")
+						 let attributedString = NSMutableAttributedString(string: w)
+
+						 // Set red color and bold font attributes
+						 let attributes: [NSAttributedString.Key: Any] = [
+//							 .font: UIFont.boldSystemFont(ofSize: 16),
+							 .foregroundColor: UIColor.red
+						 ]
+
+						 // Find the range of the specified string in the original string
+						 let range = (w as NSString).range(of: tag)
+						 // Apply the attributes to the specified range
+						 attributedString.addAttributes(attributes, range: range)
+						 attributedString.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: NSRange(location: 0, length: attributedString.length))
+
+						 // Assign the attributed string to the label's attributedText property
+						 s.text = attributedString
+						 
+						 indexes.append(s)
+					 }
+				 }
+			 }
+		 }
+	 }
+	*/
     // MARK: - Table view data source
 
     override func numberOfSections(in tableView: UITableView) -> Int {

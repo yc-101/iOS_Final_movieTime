@@ -29,6 +29,8 @@ class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableView
 	
     override func viewDidLoad() {
         super.viewDidLoad()
+		let searchController = UISearchController()
+		navigationItem.searchController = searchController
 		spinnerView.hidesWhenStopped = true
 		
 		spinnerView.startAnimating()
@@ -66,7 +68,8 @@ class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableView
 		 ]
 		 let url = "https://forum.gamer.com.tw/C.php?page=1\(backUrl)"
 		 AF.request(url, headers: headers).responseString { response in
-
+			 
+			 self.spinnerLabel.text = "requesting page..."
 			 switch response.result {
 			 case .success(let html):
 				 // 成功获取到HTML数据
@@ -105,9 +108,13 @@ class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableView
 
 
 	func loadPage(page: Int, totalPages: Int, backUrl: String, tag: String, headers: HTTPHeaders, completionHandler: @escaping () -> Void) {
+		
 		let randomDelay = Double(arc4random_uniform(3) + 1) // Random delay between 1 and 3 seconds
 		DispatchQueue.main.asyncAfter(deadline: .now() + randomDelay) {
 			print("processing page: \(page)")
+			let process = String((100*page/totalPages))
+			self.spinnerLabel.text = "loading page \(page)/\(totalPages)\n process: \(process)%"
+			
 			let url = "https://forum.gamer.com.tw/C.php?page=\(page)\(backUrl)"
 			AF.request(url, headers: headers).responseString { response in
 				var shouldContinue = true
@@ -156,7 +163,7 @@ class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableView
 			 // 提取 data-floor 属性的值
 			 let dataFloor = article.xpath(".//div[@class='c-post__header__author']//a[@class='floor tippy-gpbp']").first!["data-floor"]!
 			 s.floor = dataFloor
-	 			print("data-floor:", dataFloor)
+//	 			print("data-floor:", dataFloor)
 			 
 			 // 提取 <article> 标签的文本内容
 			 if let articleText = article.xpath(".//article[@class='c-article FM-P2']").first {
@@ -166,7 +173,11 @@ class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableView
 					 if(w.contains(tag) && w.count < 350){ // eg. "劇情"
 						 print("(\(dataFloor)) : \(w)")
 						 let attributedString = NSMutableAttributedString(string: w)
-
+						 
+						 attributedString.addAttributes([
+							.font: UIFont.boldSystemFont(ofSize: 16),
+							.foregroundColor: UIColor.label],
+							range: NSRange(location: 0, length: attributedString.length))
 						 // Set red color and bold font attributes
 						 let attributes: [NSAttributedString.Key: Any] = [
 //							 .font: UIFont.boldSystemFont(ofSize: 16),
@@ -177,7 +188,6 @@ class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableView
 						 let range = (w as NSString).range(of: tag)
 						 // Apply the attributes to the specified range
 						 attributedString.addAttributes(attributes, range: range)
-						 attributedString.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: NSRange(location: 0, length: attributedString.length))
 
 						 // Assign the attributed string to the label's attributedText property
 						 s.text = attributedString
@@ -212,28 +222,55 @@ class ViewControllerOneMovie: UIViewController, UITableViewDelegate, UITableView
 		 if let language = tagger.dominantLanguage {
 			 print("\(language)")
 		 } else {
-			 print("Unknow.")
+			 print("Unknown.")
 		 }
 	 }
 
-	 // 斷字
-	 func tokenize(sentence: String) -> [String] {
-		 var tokens:[String] = [String]()
+//	 // 斷字
+//	 func tokenize(sentence: String) -> [String] {
+//		 var tokens:[String] = [String]()
+//
+//		 let tagger = NSLinguisticTagger(tagSchemes: [.tokenType], options: 0)
+//
+//		 tagger.string = sentence
+//		 let range = NSMakeRange(0, sentence.utf16.count)
+//		 let options: NSLinguisticTagger.Options = [.omitWhitespace, .omitPunctuation]
+//
+//		 tagger.enumerateTags(in: range, unit: .word, scheme: .tokenType, options: options) { (tag, tokenRange, stop) in
+//			 let word = (sentence as NSString).substring(with: tokenRange)
+//			 tokens.append(word)
+//		 }
+//
+//		 return tokens
+//	 }
 
-		 let tagger = NSLinguisticTagger(tagSchemes: [.tokenType], options: 0)
+	func tokenize(sentence: String){
+		// Create an NLTagger instance
+		let tagger = NLTagger(tagSchemes: [.lexicalClass])
 
-		 tagger.string = sentence
-		 let range = NSMakeRange(0, sentence.utf16.count)
-		 let options: NSLinguisticTagger.Options = [.omitWhitespace, .omitPunctuation]
+		// Set the text
+		tagger.string = sentence
 
-		 tagger.enumerateTags(in: range, unit: .word, scheme: .tokenType, options: options) { (tag, tokenRange, stop) in
-			 let word = (sentence as NSString).substring(with: tokenRange)
-			 tokens.append(word)
-		 }
+		// Calculate word frequency
+		var wordFrequency: [String: Int] = [:]
 
-		 return tokens
-	 }
+		tagger.enumerateTags(in: sentence.startIndex..<sentence.endIndex, unit: .word, scheme: .lexicalClass, options: []) { tag, tokenRange in
+			if let tag = tag {
+				let word = String(sentence[tokenRange])
+				let lexicalClass = tag.rawValue
+				if (word != "，") && (word != "。") && (word != "但") {
+				wordFrequency[word, default: 0] += 1
+				}
+				
+			}
+			return true
+		}
 
+		// Print word frequency results
+		for (word, frequency) in wordFrequency {
+			print("\(word): \(frequency)")
+		}
+	}
 	 // 斷句 by GPT
 	 func extractSentences(from text: String) -> [String] {
 		 let separators = CharacterSet(charactersIn: "。\n")

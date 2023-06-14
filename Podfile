@@ -9,6 +9,8 @@ target 'movieTime' do
 	pod 'Alamofire'
 	pod 'Kanna'
 	pod 'FakeUserAgent'
+	pod 'Kingfisher'
+	pod 'jieba'
 
   target 'movieTimeTests' do
     inherit! :search_paths

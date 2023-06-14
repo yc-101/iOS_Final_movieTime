@@ -6,7 +6,6 @@
 //
 
 import UIKit
-
 class WelcomePage: UIViewController {
 
 	@IBAction func toTestMovie(_ sender: Any) {
@@ -17,8 +16,6 @@ class WelcomePage: UIViewController {
 	
 	override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
     }
     
 

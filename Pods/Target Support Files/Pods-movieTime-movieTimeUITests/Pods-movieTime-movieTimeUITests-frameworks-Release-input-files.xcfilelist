@@ -2,3 +2,5 @@ ${PODS_ROOT}/Target Support Files/Pods-movieTime-movieTimeUITests/Pods-movieTime
 ${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework
 ${BUILT_PRODUCTS_DIR}/FakeUserAgent/FakeUserAgent.framework
 ${BUILT_PRODUCTS_DIR}/Kanna/Kanna.framework
+${BUILT_PRODUCTS_DIR}/Kingfisher/Kingfisher.framework
+${BUILT_PRODUCTS_DIR}/jieba/jieba.framework

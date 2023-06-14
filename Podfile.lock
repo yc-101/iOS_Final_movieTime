@@ -1,24 +1,32 @@
 PODS:
   - Alamofire (5.7.1)
   - FakeUserAgent (0.2.0)
+  - jieba (0.0.1)
   - Kanna (5.2.7)
+  - Kingfisher (7.7.0)
 
 DEPENDENCIES:
   - Alamofire
   - FakeUserAgent
+  - jieba
   - Kanna
+  - Kingfisher
 
 SPEC REPOS:
   trunk:
     - Alamofire
     - FakeUserAgent
+    - jieba
     - Kanna
+    - Kingfisher
 
 SPEC CHECKSUMS:
   Alamofire: 0123a34370cb170936ae79a8df46cc62b2edeb88
   FakeUserAgent: a42bf4b041b4431d95a02d6fcf89f9c143fbffbf
+  jieba: bed1986b09448a165b384e89f935c6453592dea9
   Kanna: 01cfbddc127f5ff0963692f285fcbc8a9d62d234
+  Kingfisher: f043ac666dfc96c1f37604f93effb45a7ee3a3e1
 
-PODFILE CHECKSUM: 0b1935704b3e1a1a5db3ae5aeec301ad3ce0733b
+PODFILE CHECKSUM: 7a041000c3993c3d988301b1788f9c40fd11c2e9
 
 COCOAPODS: 1.12.1

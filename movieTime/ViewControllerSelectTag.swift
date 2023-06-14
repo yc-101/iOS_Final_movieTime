@@ -10,13 +10,17 @@ import UIKit
 class ViewControllerSelectTag: UIViewController, UITableViewDelegate, UITableViewDataSource {
 	
 	var backUrl = String()
-	var tags: [String] = ["劇情", "角色", "畫面"]
+	var t = ["劇情", "角色", "畫面"]
+	lazy var tags = t
 	@IBOutlet weak var tableView: UITableView!
 	
 	override func viewDidLoad() {
         super.viewDidLoad()
-		let str = TableViewControllerAllMovies().selectedMovie.name
-		print(TableViewControllerAllMovies().selectedMovie.name)
+		let searchController = UISearchController()
+		navigationItem.searchController = searchController
+		searchController.searchResultsUpdater = self
+		navigationItem.hidesSearchBarWhenScrolling = false
+		
     }
     
 
@@ -58,13 +62,27 @@ class ViewControllerSelectTag: UIViewController, UITableViewDelegate, UITableVie
 	// 選擇到的row會跳訊息
 	func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 		print("row = ", indexPath.row)
-//		if let vc = storyboard?.instantiateViewController(withIdentifier: "oneMoviePage") {
-//			show(vc, sender: self)
-//		}
-//		if let vc = storyboard?.instantiateViewController(withIdentifier: "oneMoviePage") {
-//			self.navigationController?.pushViewController(vc, animated: true)
-//		}
-//		if segue.
 	}
 	
+}
+
+extension ViewControllerSelectTag: UISearchResultsUpdating {
+	func updateSearchResults(for searchController: UISearchController) {
+		
+		if let searchText = searchController.searchBar.text,
+		!searchText.isEmpty {
+			tags = t.filter { tag in
+				tag.localizedStandardContains(searchText)
+			}
+			// Update your table view's data source with the filtered tags
+			// For example, if your table view has a data source array called 'dataSource', you can do:
+//				tags = t
+		} else {
+			// Set the table view's data source to the original array of tags
+			// For example, if your table view has a data source array called 'dataSource', you can do:
+			tags = t
+		}
+		
+		tableView.reloadData()
+	}
 }
